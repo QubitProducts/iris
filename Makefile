@@ -7,7 +7,6 @@ LOCAL_CONF_DIR:=$(shell pwd)/support/local-conf
 
 .PHONY: gen-protos test container docker publish launch_iris launch_envoy clean
 
-
 $(DATA_PLANE_API_LOC):
 	git clone $(DATA_PLANE_API_REPO) $(DATA_PLANE_API_LOC)
 
