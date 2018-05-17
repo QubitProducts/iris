@@ -1,0 +1,52 @@
+node:
+  id: envoy
+  cluster: envoy_cluster
+
+admin:
+  access_log_path: /tmp/admin_access.log
+  address:
+    socket_address: { address: 0.0.0.0, port_value: 9000 }
+
+dynamic_resources:
+  lds_config:
+    ads: {}
+
+  cds_config:
+    ads: {}
+
+  ads_config:
+    api_type: GRPC
+    refresh_delay: 5s
+    cluster_names: [iris_cluster]
+    grpc_services:
+      timeout: 0.5s
+      envoy_grpc:
+        cluster_name: iris_cluster
+
+static_resources:
+  clusters:
+    - name: envoy_cluster
+      connect_timeout: 1s
+      type: STATIC
+      hosts:
+        - { socket_address: {address: 127.0.0.1, port_value: 8082 } }
+    - name: iris_cluster
+      connect_timeout: 1s
+      type: STRICT_DNS
+      lb_policy: LEAST_REQUEST
+      http2_protocol_options: {}
+      hosts:
+        - { socket_address: { address: docker.for.mac.localhost, port_value: 8080 } }
+      tls_context:
+        sni: "iris"
+        common_tls_context:
+          alpn_protocols: "h2,http/1.1"
+      health_checks:
+        timeout: 0.5s
+        interval: 10s
+        unhealthy_threshold: 2
+        healthy_threshold: 2
+        grpc_health_check: {}
+
+cluster_manager:
+  local_cluster_name: envoy_cluster

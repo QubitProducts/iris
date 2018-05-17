@@ -1,0 +1,102 @@
+iris:
+  namespace: default
+  log_level: DEBUG
+  parallelism: 4
+  state_refresh_period: 1s
+  state_buffer_size: 16
+
+listeners:
+  - name: test_proxy
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8082 }
+    filter_chains:
+      - filters:
+        - name: envoy.http_connection_manager
+          config:
+            codec_type: AUTO
+            stat_prefix: test_proxy
+            generate_request_id: true
+            rds:
+              route_config_name: test_route
+              config_source:
+                ads: {}
+            tracing:
+              operation_name: egress
+            http_filters:
+              - name: envoy.router
+
+
+routes:
+  - name: test_route
+    virtual_hosts:
+      - name: test_svc
+        domains: ["*"]
+        routes:
+          - match: 
+              prefix: "/qubit.app.v1.WriteService/" 
+            route: 
+              cluster: grpc_write_cluster 
+              timeout: 15s
+              priority: DEFAULT
+              retry_policy: { num_retries: 3, retry_on: "5xx;resource-exhausted" }
+          - match:
+              prefix: "/qubit.app.v1.ReadService/" 
+            route:
+              cluster: grpc_read_cluster 
+              timeout:  4s
+              priority: HIGH
+              retry_policy: { "num_retries": 3, "retry_on": "5xx;resource-exhausted", "per_try_timeout": "1s" }
+
+clusters:
+  - service_name: "app-write"
+    port_name: "app-grpc"
+    config:
+      name: grpc_write_cluster
+      connect_timeout: 5s
+      type: EDS
+      eds_cluster_config:
+        eds_config:
+          ads: {}
+      lb_policy: RANDOM
+      http2_protocol_options: { "max_concurrent_streams": 256 }                        
+      outlier_detection: {}
+      circuit_breakers: 
+        thresholds:
+            - priority: DEFAULT
+              max_connections: 128
+              max_pending_requests: 128
+              max_requests: 256
+      health_checks:
+        - timeout: 1s 
+          interval: 15s
+          interval_jitter: 2s
+          healthy_threshold: 2
+          unhealthy_threshold: 2
+          grpc_health_check: {}
+   
+  - service_name: "app-read"
+    port_name: "app-grpc"
+    config:
+      name: grpc_read_cluster
+      connect_timeout: 5s
+      type: EDS
+      eds_cluster_config:
+        eds_config:
+          ads: {}
+      lb_policy: RANDOM
+      http2_protocol_options: { "max_concurrent_streams": 256 }                        
+      outlier_detection: {}
+      circuit_breakers: 
+        thresholds:
+            - priority: DEFAULT
+              max_connections: 128
+              max_pending_requests: 128
+              max_requests: 256
+      health_checks:
+        - timeout: 1s
+          interval: 10s
+          interval_jitter: 2s
+          healthy_threshold: 2
+          unhealthy_threshold: 2
+          grpc_health_check: {}
+

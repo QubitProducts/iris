@@ -1,0 +1,4 @@
+*.swp
+/iris
+/vendor
+/support/local-conf/certs

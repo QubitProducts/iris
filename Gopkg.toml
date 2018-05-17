@@ -1,0 +1,44 @@
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/envoyproxy/go-control-plane"
+
+[[constraint]]
+  name = "github.com/ghodss/yaml"
+  version = "1.0.0"
+
+[[constraint]]
+  name = "github.com/gogo/protobuf"
+  version = "0.5.0"
+
+[[override]]
+  name = "github.com/pkg/errors"
+  version = "0.8.0"
+
+[[constraint]]
+  name = "github.com/spf13/cobra"
+  version = "0.0.2"
+
+[[constraint]]
+  name = "go.uber.org/zap"
+  version = "1.8.0"
+
+[[constraint]]
+  name = "k8s.io/api"
+  version = "kubernetes-1.10.0"
+
+[[constraint]]
+  name = "k8s.io/apimachinery"
+  version = "kubernetes-1.10.0"
+
+[[constraint]]
+  name = "k8s.io/client-go"
+  version = "7.0.0"
+
+[[override]]
+  name = "github.com/docker/distribution"
+  branch = "master"
+
+[prune]
+  go-tests = true
+  unused-packages = true

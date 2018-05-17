@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ template "iris.fullname" . }}
+  labels:
+    app: {{ template "iris.name" . }}
+    chart: {{ template "iris.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+data:
+  iris.yaml: |-
+{{ toYaml $.Values.iris.config | indent 4 }}

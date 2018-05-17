@@ -1,0 +1,17 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ template "iris.fullname" . }}
+  labels:
+    app: {{ template "iris.name" . }}
+    chart: {{ template "iris.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+    scaleTargetRef: 
+        apiVersion: apps/v1
+        kind: Deployment
+        name: {{ template "iris.fullname" . }}
+    minReplicas: {{ .Values.scaling.minReplicas }}
+    maxReplicas: {{ .Values.scaling.maxReplicas }}
+    targetCPUUtilizationPercentage: {{ .Values.scaling.cpuUtilizationPercentage }}

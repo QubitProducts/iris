@@ -1,0 +1,19 @@
+apiVersion: skaffold/v1alpha2
+kind: Config
+build:
+  tagPolicy:
+    gitCommit: {}
+  artifacts:
+    - imageName: qubit/iris
+  local:
+    skipPush: true
+deploy:
+  helm:
+    releases:
+      - name: iris
+        namespace: default
+        chartPath: support/deploy/iris
+        valuesFilePath: support/deploy/iris/values.yaml
+        values:
+          image.name: qubit/iris
+

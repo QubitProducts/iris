@@ -1,0 +1,42 @@
+replicaCount: 1
+
+image:
+  name: qubit/iris:latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8080
+
+scaling:
+  minReplicas: 3
+  maxReplicas: 9
+  cpuUtilizationPercentage: 75
+
+iris:
+  port: 8080
+  tlsEnabled: true
+  localSecretsPath: secrets/local
+  secretName: iris
+  tlsCACertificate: IrisCA.crt
+  tlsCertificate: IrisServer.crt
+  tlsKey: IrisServer.key
+  config:
+    iris:
+      namespace: default
+      log_level: INFO
+      parallelism: 4
+      state_refresh_period: 1s
+      state_buffer_size: 16
+
+    listeners: []
+    routes: []
+    clusters: []
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

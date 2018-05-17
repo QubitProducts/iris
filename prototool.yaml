@@ -1,0 +1,35 @@
+protoc_version: 3.5.1
+protoc_includes:
+  - /tmp/iris/data-plane-api
+  - vendor/github.com/google
+  - vendor/github.com/gogo/googleapis
+  - vendor/github.com/gogo/protobuf
+  - vendor/github.com/lyft/protoc-gen-validate
+protoc_include_wkt: true
+lint:
+  exclude_ids:
+    - ENUM_FIELD_PREFIXES
+gen:
+  go_options:
+    import_path: github.com/QubitProducts/iris
+    extra_modifiers:
+      google/api/annotations.proto: github.com/gogo/googleapis/google/api
+      google/api/http.proto: github.com/gogo/googleapis/google/api
+      google/rpc/code.proto: github.com/gogo/googleapis/google/rpc
+      google/rpc/error_details.proto: github.com/gogo/googleapis/google/rpc
+      google/rpc/status.proto: github.com/gogo/googleapis/google/rpc
+      google/protobuf/any.proto: github.com/gogo/protobuf/types
+      google/protobuf/duration.proto: github.com/gogo/protobuf/types
+      google/protobuf/struct.proto: github.com/gogo/protobuf/types
+      google/protobuf/timestamp.proto: github.com/gogo/protobuf/types
+      google/protobuf/wrappers.proto: github.com/gogo/protobuf/types
+      gogoproto/gogo.proto: github.com/gogo/protobuf/gogoproto
+      trace.proto: istio.io/gogo-genproto/opencensus/proto/trace
+      metrics.proto: istio.io/gogo-genproto/prometheus 
+      envoy/api/v2/cds.proto: github.com/envoyproxy/go-control-plane/envoy/api/v2
+      envoy/api/v2/rds.proto: github.com/envoyproxy/go-control-plane/envoy/api/v2
+      envoy/api/v2/lds.proto: github.com/envoyproxy/go-control-plane/envoy/api/v2
+  plugins:
+    - name: gogofast
+      type: gogo
+      output: .

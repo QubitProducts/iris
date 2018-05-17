@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ template "iris.fullname" . }}
+  labels:
+    app: {{ template "iris.name" . }}
+    chart: {{ template "iris.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ template "iris.name" . }}
+      release: {{ .Release.Name }}
+  template:
+    metadata:
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "{{ .Values.iris.port }}"
+      labels:
+        app: {{ template "iris.name" . }}
+        release: {{ .Release.Name }}
+    spec:
+      serviceAccountName: {{ template "iris.fullname" . }}
+      volumes:
+        - name: "{{ template "iris.name" . }}-conf"
+          configMap:
+            name: "{{ template "iris.fullname" . }}"
+{{- if .Values.iris.tlsEnabled }}
+        - name: "{{ template "iris.name" . }}-secret"
+          secret:
+            secretName: {{ .Values.iris.secretName }}
+{{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ .Values.image.name }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - "serve"
+            - "--conf=/conf/iris.yaml"
+            - "--watch_conf=true"
+{{- if .Values.iris.tlsEnabled }}
+            - "--tls_ca=/secrets/{{ .Values.iris.tlsCACertificate }}"
+            - "--tls_crt=/secrets/{{ .Values.iris.tlsCertificate }}"
+            - "--tls_key=/secrets/{{ .Values.iris.tlsKey }}"
+{{- end }}
+          volumeMounts:
+            - name: "{{ template "iris.name" . }}-conf"
+              mountPath: "/conf"
+{{- if .Values.iris.tlsEnabled }}
+            - name: "{{ template "iris.name" . }}-secret"
+              mountPath: "/secrets"
+{{- end }}
+          ports:
+            - name: iris
+              containerPort: {{ .Values.iris.port }}
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /status
+              port: iris
+          readinessProbe:
+            httpGet:
+              path: /status
+              port: iris
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

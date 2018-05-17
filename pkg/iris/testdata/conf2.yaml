@@ -1,0 +1,117 @@
+iris:
+  namespace: test
+  log_level: INFO
+  parallelism: 4
+  default_pod_port: 8081
+  state_refresh_period: 1s
+  state_buffer_size: 16
+
+listeners:
+  - name: app_proxy
+    address:
+      socket_address: { address: 0.0.0.0, port_value: 8082 }
+    filter_chains:
+      - filters:
+        - name: envoy.http_connection_manager
+          config:
+            codec_type: AUTO
+            stat_prefix: app_proxy
+            generate_request_id: true
+            rds:
+              route_config_name: app_route
+              config_source:
+                ads: {}
+            tracing:
+              operation_name: egress
+            http_filters:
+              - name: envoy.router
+
+routes:
+  - name: app_route
+    virtual_hosts:
+      - name: app_svc
+        domains: ["*"]
+        routes:
+          - match:
+              path: "/metrics"
+            route: 
+              cluster: local
+              timeout: 1s
+          - match: 
+              regex: "/qubit.app.v1.AppService/(OperationA|OperationB)" 
+            route: 
+              cluster: grpc_write_cluster 
+              timeout: 5s
+              priority: DEFAULT
+              retry_policy: { num_retries: 3, retry_on: "5xx;resource-exhausted" }
+          - match:
+              prefix: "/qubit.app.v1.AppService/" 
+            route:
+              cluster: grpc_read_cluster 
+              timeout: 1s
+              priority: HIGH
+              retry_policy: { num_retries: 3, retry_on: "5xx;resource-exhausted", per_try_timeout: 0.3s  }
+clusters:
+  - service_name: write-svc
+    port_name: my-port
+    config:
+      connect_timeout: 1s
+      type: EDS
+      lb_policy: RANDOM
+      http2_protocol_options: { "max_concurrent_streams": 256 }                        
+      outlier_detection: {}
+      circuit_breakers: 
+        thresholds:
+            - priority: DEFAULT
+              max_connections: 128
+              max_pending_requests: 128
+              max_requests: 256
+      health_checks:
+        - timeout: 1s
+          interval: 5s
+          interval_jitter: 2s
+          healthy_threshold: 2
+          unhealthy_threshold: 2
+          grpc_health_check: {}
+      tls_context: 
+        sni: "localhost"
+        common_tls_context:
+          alpn_protocols: ["h2"]
+          tls_certificates:
+            - private_key:
+                filename: "/secrets/client.key"
+              certificate_chain:
+                filename: "/secrets/client.crt"
+    
+  - service_name: read-svc
+    port_name: my-port
+    config:
+      name: grpc_read_cluster
+      connect_timeout: 1s
+      type: EDS
+      lb_policy: RANDOM
+      http2_protocol_options: { "max_concurrent_streams": 256 }                        
+      outlier_detection: {}
+      circuit_breakers: 
+        thresholds:
+            - priority: DEFAULT
+              max_connections: 128
+              max_pending_requests: 128
+              max_requests: 256
+      health_checks:
+        - timeout: 0.5s
+          interval: 5s
+          interval_jitter: 2s
+          healthy_threshold: 2
+          unhealthy_threshold: 2
+          grpc_health_check: {}
+      tls_context: 
+        sni: "localhost"
+        common_tls_context:
+          alpn_protocols: ["h2"]
+          tls_certificates:
+            - private_key:
+                filename: "/secrets/client.key"
+              certificate_chain:
+                filename: "/secrets/client.crt"
+
