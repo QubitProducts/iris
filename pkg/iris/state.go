@@ -8,13 +8,13 @@ import (
 	"sync"
 	"time"
 
+	"github.com/QubitProducts/iris/pkg/v1pb"
 	"github.com/eapache/go-resiliency/batcher"
 	envoy "github.com/envoyproxy/go-control-plane/envoy/api/v2"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/core"
 	"github.com/envoyproxy/go-control-plane/envoy/api/v2/endpoint"
 	"github.com/envoyproxy/go-control-plane/pkg/cache"
 	"github.com/gogo/protobuf/types"
-	"github.com/QubitProducts/iris/pkg/v1pb"
 	"go.opencensus.io/stats"
 	"go.opencensus.io/tag"
 	"go.uber.org/zap"
@@ -74,6 +74,8 @@ func NewState(config *v1pb.Config, envoyCache cache.SnapshotCache, eventChan <-c
 	}
 
 	s.b = batcher.New(*config.Iris.StateRefreshPeriod, s.refresh)
+
+	s.refresh(nil)
 	go s.eventLoop()
 	return s
 }

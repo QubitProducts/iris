@@ -10,7 +10,7 @@ Once Prototool is installed, run `make gen-protos` to regenerate the protobuf co
 Testing On Kubernetes
 -------------------
 
-[Skaffold](https://github.com/GoogleContainerTools/skaffold) and [Helm](https://www.helm.sh) is required for testing and deploying Iris to a Kubernetes cluster. 
+[Skaffold](https://github.com/GoogleContainerTools/skaffold) and [Helm](https://www.helm.sh) are required for testing and deploying Iris to a Kubernetes cluster. 
 
 Edit `skaffold.yaml` to set the Iris configuration as appropriate and run `skaffold dev` launch a development pipeline
 

@@ -61,8 +61,6 @@ iris:
   log_level: DEBUG
   # Number of goroutines to use to watch and process pod events
   parallelism: 4
-  # Default port to use if the iris.qubit.com/port annotation is absent from a pod
-  default_pod_port: 8081
   # How long to buffer the events before publishing the state 
   state_refresh_period: 1s
   # Number of unpublished state changes allowed
